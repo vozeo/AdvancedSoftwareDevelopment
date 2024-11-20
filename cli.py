@@ -1,6 +1,7 @@
 # cli.py
 from editor import Editor
 from display import TreeDisplayStrategy, IndentDisplayStrategy
+from model import HTMLElement
 from spell_checker import SpellChecker
 from commands import (
     InsertCommand,

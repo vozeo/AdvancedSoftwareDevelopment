@@ -1,5 +1,7 @@
 # commands.py
 from abc import ABC, abstractmethod
+from typing import Optional
+
 from model import HTMLDocument, HTMLElement
 
 class Command(ABC):

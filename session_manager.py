@@ -28,7 +28,7 @@ class SessionManager:
         editor = Editor(document)
         self.editors[filename] = editor
         self.active_filename = filename
-        print(f"Loaded file: {filename}")
+        return filename
 
     def save(self, filename: str, writer: HTMLWriter):
         """
@@ -41,22 +41,22 @@ class SessionManager:
         writer.write(editor.document, filename)
         editor.is_modified = False
 
-    def close(self, filename: str, writer: HTMLWriter):
+    def close(self, writer: HTMLWriter):
         """
         关闭指定文件，如果修改过则保存。
         """
-        if filename not in self.editors:
-            print(f"File '{filename}' is not loaded.")
+        target_name = self.active_filename
+        if target_name =="":
+            print("Editor is empty.")
             return
-        editor = self.editors[filename]
+        editor = self.editors[target_name]
         if editor.is_modified:
-            choice = input(f"File '{filename}' has unsaved changes. Save before closing? (y/n): ").lower()
+            choice = input(f"File '{target_name}' has unsaved changes. Save before closing? (y/n): ").lower()
             if choice == 'y':
-                self.save(filename, writer)
-        del self.editors[filename]
-        print(f"Closed file: {filename}")
-        if self.active_filename == filename:
-            self.active_filename = next(iter(self.editors), "")
+                self.save(target_name, writer)
+        del self.editors[target_name]
+        print(f"Closed file: {target_name}")
+        self.active_filename = next(iter(self.editors), "")
 
     def list_editors(self):
         """
