@@ -51,11 +51,10 @@ def main():
             filename = parts[1]
             session_manager.save(filename, writer)
         elif command == "close":
-            if len(parts) < 2:
-                print("Invalid close command. Usage: close <filepath>")
+            if len(parts) >= 2:
+                print("Invalid close command. Usage: close")
                 continue
-            filename = parts[1]
-            session_manager.close(filename, writer)
+            session_manager.close(writer)
         elif command == "editor-list":
             session_manager.list_editors()
         elif command == "edit":
@@ -70,7 +69,7 @@ def main():
                 cli.start()
         else:
             print(
-                "Unknown command. Available commands: init, read <filepath>, save <filepath>, close <filepath>, editor-list, edit <filepath>, exit.")
+                "Unknown command. Available commands: init, read <filepath>, save <filepath>, close, editor-list, edit <filepath>, exit.")
 
 
 if __name__ == "__main__":
