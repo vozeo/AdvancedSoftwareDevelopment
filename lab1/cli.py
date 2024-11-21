@@ -1,7 +1,8 @@
 # cli.py
+# 这里导入了HTMLElement包，并新增了init命令
+from model import HTMLElement
 from editor import Editor
 from display import TreeDisplayStrategy, IndentDisplayStrategy
-from model import HTMLElement
 from spell_checker import SpellChecker
 from commands import (
     InsertCommand,
@@ -56,6 +57,8 @@ class CLI:
                 self.handle_print_indent(parts)
             elif command == "spell-check":
                 self.handle_spell_check()
+            elif command == "init":
+                self.handle_init()
             elif command == "undo":
                 self.editor.undo()
             elif command == "redo":
@@ -76,6 +79,7 @@ delete <elementId>
 print-tree
 print-indent [indentSize]
 spell-check
+init
 undo
 redo
 showid <true|false>
@@ -155,6 +159,11 @@ exit
             print("Spelling Errors:")
             for error in errors:
                 print(error)
+
+    def handle_init(self):
+        # TODO 需要写工具类来完成这个功能
+        command = InitCommand(self.editor.document)
+        self.editor.execute_command(command)
 
     def handle_showid(self, parts):
         if len(parts) < 2:
