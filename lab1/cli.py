@@ -161,7 +161,7 @@ exit
                 print(error)
 
     def handle_init(self):
-        # TODO 需要写工具类来完成这个功能
+        # TODO 需要在commands.py写工具类来完成这个功能
         command = InitCommand(self.editor.document)
         self.editor.execute_command(command)
 
