@@ -55,6 +55,7 @@ Type any command above to perform the specified action.
         command = parts[0].lower()
 
         if command in ["exit", "quit"]:
+            # 保存当前编辑的文件
             session_manager.close(writer)
             print("Exiting session manager.")
             break
