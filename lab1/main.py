@@ -55,11 +55,10 @@ Type any command above to perform the specified action.
         command = parts[0].lower()
 
         if command in ["exit", "quit"]:
-            # TODO: 需要一个返回所有editor文件名称的函数，现有的函数是打印所有名称
-            # TODO: 实现会话状态的保存和恢复 其实可以直接在这实现关闭所有editor就好，或者挨个提示要不要保存
+            # 保存当前编辑的文件
+            session_manager.close(writer)
             print("Exiting session manager.")
             break
-            # TODO: 这里需要在editor里实现init
         # elif command == "init":
         #     if len(parts) < 2:
         #         filename = "new_document.html"
