@@ -3,7 +3,8 @@
 from model import HTMLElement
 from editor import Editor
 from display import TreeDisplayStrategy, IndentDisplayStrategy
-from spell_checker import SpellChecker
+from spell_checker import HTMLSpellChecker
+from session_manager import SessionManager
 from commands import (
     InsertCommand,
     AppendCommand,
@@ -16,9 +17,10 @@ class CLI:
     """
     提供命令行交互界面，接收用户输入并显示输出。
     """
-    def __init__(self, editor: Editor):
+    def __init__(self, editor: Editor, session_manager: SessionManager):
         self.editor = editor
-        self.spell_checker = SpellChecker()
+        self.session_manager = session_manager 
+        self.spell_checker = HTMLSpellChecker()
         self.display_strategy = TreeDisplayStrategy()  # 默认树形显示
 
     def start(self):
@@ -53,7 +55,7 @@ class CLI:
                 self.handle_delete(parts)
             elif command == "print-tree":
                 self.handle_print_tree()
-            elif command == "print-indent":
+            elif command == "print-ident":
                 self.handle_print_indent(parts)
             elif command == "spell-check":
                 self.handle_spell_check()
@@ -65,27 +67,35 @@ class CLI:
                 self.editor.redo()
             elif command == "showid":
                 self.handle_showid(parts)
+            elif command == "dir-tree":
+                self.handle_dir_tree()
+            elif command == "dir-ident":
+                self.handle_dir_indent(parts)
+            elif command == "dir":
+                self.handle_dir(parts)
             else:
                 print("Unknown command. Type 'help' for a list of commands.")
 
     def print_help(self):
         help_text = """
-Available commands:
-insert <tagName> <idValue> <insertLocation> [textContent]
-append <tagName> <idValue> <parentElement> [textContent]
-edit-id <oldId> <newId>
-edit-text <elementId> [newTextContent]
-delete <elementId>
-print-tree
-print-indent [indentSize]
-spell-check
-init
-undo
-redo
-showid <true|false>
-help
-exit
-"""
+            Available commands:
+            insert <tagName> <idValue> <insertLocation> [textContent]
+            append <tagName> <idValue> <parentElement> [textContent]
+            edit-id <oldId> <newId>
+            edit-text <elementId> [newTextContent]
+            delete <elementId>
+            print-tree
+            print-ident [identSize]
+            spell-check
+            init
+            undo
+            redo
+            showid <true|false>
+            dir-tree
+            dir-ident [identSize]
+            help
+            exit
+        """
         print(help_text)
 
     def handle_insert(self, parts):
@@ -139,6 +149,7 @@ exit
         self.editor.execute_command(command)
 
     def handle_print_tree(self):
+        self.display_strategy = TreeDisplayStrategy()
         self.display_strategy.display(self.editor.document, self.editor.show_id)
 
     def handle_print_indent(self, parts):
@@ -178,3 +189,32 @@ exit
             print("showId set to False.")
         else:
             print("Invalid value for showid. Use 'true' or 'false'.")
+            
+    def handle_dir_tree(self):
+        self.display_strategy = TreeDisplayStrategy()
+        #print("Available sessions:")
+        #print(self.session_manager.list_editors())
+        #print("Current session:")
+        #print(self.session_manager.get_active_editor())
+        #print("Available files:")
+        #print(self.session_manager.get_opened_files())
+        #print("Current file:")
+        #print(self.session_manager.active_filename)
+        #print("------------------------------------")
+        self.display_directory(self.session_manager.editors.keys())
+
+    def handle_dir_indent(self, parts):
+        indent_size = 2  # 默认缩进
+        if len(parts) > 1:
+            try:
+                indent_size = int(parts[1])
+            except ValueError:
+                print("Invalid indent value. Using default (2).")
+        self.display_strategy = IndentDisplayStrategy(indent_size)
+        self.display_directory(self.session_manager.editors.keys())
+
+    def display_directory(self, filenames):
+        for filename in filenames:
+            #modified_indicator = "*" if self.session_manager.editors[filename].is_modified else ""
+            modified_indicator = "*" if self.session_manager.active_filename == filename else ""
+            print(f"{filename}{modified_indicator}")

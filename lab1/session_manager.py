@@ -28,6 +28,7 @@ class SessionManager:
         editor = Editor(document)
         self.editors[filename] = editor
         self.active_filename = filename
+        print(f"Loaded file: {filename}")
         return filename
 
     def save(self, filename: str, writer: HTMLWriter):
@@ -88,3 +89,9 @@ class SessionManager:
             return self.editors[self.active_filename]
         else:
             return None
+        
+    def get_opened_files(self):
+        """
+        获取当前打开的文件列表。
+        """
+        return list(self.editors.keys())

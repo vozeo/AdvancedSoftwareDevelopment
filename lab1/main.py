@@ -77,7 +77,7 @@ Type any command above to perform the specified action.
             session_manager.load(filename, parser)
             editor = session_manager.get_active_editor()
             if editor:
-                cli = CLI(editor)
+                cli = CLI(editor, session_manager)
                 cli.start()
         elif command == "save":
             if len(parts) < 2:
@@ -100,7 +100,7 @@ Type any command above to perform the specified action.
             session_manager.switch_editor(filename)
             editor = session_manager.get_active_editor()
             if editor:
-                cli = CLI(editor)
+                cli = CLI(editor, session_manager)
                 cli.start()
         else:
             print(

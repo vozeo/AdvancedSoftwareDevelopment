@@ -1,5 +1,7 @@
-# display.py
+#display.py
 from model import HTMLDocument, HTMLElement
+import io
+from contextlib import redirect_stdout
 
 class DisplayStrategy:
     """
@@ -17,13 +19,36 @@ class TreeDisplayStrategy(DisplayStrategy):
 
     def print_element(self, element: HTMLElement, prefix: str, is_last: bool, show_id: bool):
         connector = "└── " if is_last else "├── "
-        print(prefix + connector, end='')
+        text_connector = "    " if is_last else "│   "
+
+        # 检查是否有拼写错误
+        spell_check_mark = "[X] " if element.has_spelling_error else ""
 
         id_part = f"#{element.id}" if show_id else ""
-        print(f"{element.tag_name}{id_part}")
+        # Print the tag name with id (if any)
+        if not element.parent:
+            print(f"{spell_check_mark}{element.tag_name}{id_part}")
+        else:
+            print(prefix + connector + f"{spell_check_mark}{element.tag_name}{id_part}")
 
-        new_prefix = prefix + ("    " if is_last else "│   ")
         child_count = len(element.children)
+        # Handle text content
+        if element.text_content:
+            text_prefix = prefix + text_connector
+            if child_count == 0:
+                print(text_prefix + "└── " + element.text_content)
+            else:
+                print(text_prefix + "├── " + element.text_content)
+        else:
+            text_prefix = ""  # For subsequent children to use correct indentation
+
+        # Recursively print child elements
+        if not element.parent:
+            tempprefix = ""
+        else:
+            tempprefix = "    "
+        new_prefix = prefix + text_connector if element.text_content else prefix + (tempprefix if is_last else "│   ")
+        #print(child_count)
         for i, child in enumerate(element.children):
             is_last_child = (i == child_count - 1)
             self.print_element(child, new_prefix, is_last_child, show_id)
@@ -36,7 +61,10 @@ class IndentDisplayStrategy(DisplayStrategy):
         self.indent_size = indent_size
 
     def display(self, document: HTMLDocument, show_id: bool):
-        self.serialize_element(document.root, 0, show_id)
+        #print("start to show indent form")
+        res = self.serialize_element(document.root, 0, show_id)
+        print(res)
+        #print("finish to show indent form")
 
     def serialize_element(self, element: HTMLElement, level: int, show_id: bool) -> str:
         indent = ' ' * (self.indent_size * level)
@@ -61,4 +89,5 @@ class IndentDisplayStrategy(DisplayStrategy):
             result += f"{indent}</{tag}>\n"
         else:
             result += f"</{tag}>\n"
+
         return result

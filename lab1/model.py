@@ -1,5 +1,6 @@
 # model.py
 from typing import List, Optional
+from spellchecker import SpellChecker
 
 class HTMLElement:
     """
@@ -11,6 +12,7 @@ class HTMLElement:
         self.text_content = text_content
         self.children: List['HTMLElement'] = []
         self.parent: Optional['HTMLElement'] = None
+        self.has_spelling_error = False
 
     def add_child(self, child: 'HTMLElement'):
         """
@@ -18,6 +20,25 @@ class HTMLElement:
         """
         self.children.append(child)
         child.parent = self
+        self.check_spelling(child)
+
+    def check_spelling(self, element: 'HTMLElement'):
+        """
+        检查元素及其子元素的拼写错误。
+        """
+        checker = SpellChecker()
+        if element.text_content:
+            words = [word.strip('.,!?()[]{}":;') for word in element.text_content.split()]
+            words = [word for word in words if word]  # 移除空字符串
+            words = [word for word in words if not word.isdigit() and not any(
+                c.isalpha() and c > '\u4e00' and c < '\u9fff' for c in word)]  # 排除数字和中文
+            misspelled_words = checker.unknown(words)
+            for word in words:
+                if word in misspelled_words:
+                    element.has_spelling_error = True
+                    break  # 一旦发现拼写错误，退出循环
+        for child in element.children:
+            self.check_spelling(child)
 
     def remove_child(self, child: 'HTMLElement'):
         """
