@@ -95,3 +95,26 @@ class SessionManager:
         获取当前打开的文件列表。
         """
         return list(self.editors.keys())
+
+    def get_showids(self):
+        """
+            获取当前打开的文件列表对应的所有showid。
+        """
+        editors = list(self.editors.values())
+        return [editor.show_id for editor in editors]
+
+    def get_active_file(self):
+        """
+            获取当前活动文件名
+        """
+        return self.active_filename
+
+    def set_showid_false(self, file_name):
+        """
+            设置file_name文件的showid为false
+        """
+        editor = self.editors[file_name]
+        editor.show_id = False
+
+    def set_active_file(self, file_name):
+        self.active_filename = file_name
