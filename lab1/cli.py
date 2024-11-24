@@ -3,153 +3,184 @@
 from model import HTMLElement
 from editor import Editor
 from display import TreeDisplayStrategy, IndentDisplayStrategy
-from spell_checker import SpellChecker
-from commands import (
-    InsertCommand,
-    AppendCommand,
-    EditIdCommand,
-    EditTextCommand,
-    DeleteCommand
-)
+from spell_checker import HTMLSpellChecker
+from session_manager import SessionManager
+from commands import *
+from io_manager import HTMLParser, HTMLWriter
+from typing import Callable, List
+import json
+import sys
+
+import pdb
+
 
 class CLI:
     """
     提供命令行交互界面，接收用户输入并显示输出。
     """
-    def __init__(self, editor: Editor):
+
+    def __init__(
+        self,
+        editor: Editor,
+        session_manager: SessionManager,
+        spell_checker: HTMLSpellChecker,
+        parser: HTMLParser,
+        writer: HTMLWriter,
+    ):
         self.editor = editor
-        self.spell_checker = SpellChecker()
-        self.display_strategy = TreeDisplayStrategy()  # 默认树形显示
+        self.session_manager = session_manager
+        self.spell_checker = spell_checker
+        self.parser = parser
+        self.writer = writer
+        self.tree_display = TreeDisplayStrategy()
 
-    def start(self):
-        print("Entering editor session. Type 'help' for a list of commands.")
-        while True:
-            try:
-                user_input = input("> ").strip()
-            except (EOFError, KeyboardInterrupt):
-                print("\nExiting editor.")
-                break
+        # Use 2 as the default indent_size.
+        self.indent_display = IndentDisplayStrategy(2)
 
-            if not user_input:
-                continue
+        self.help_text = help_text
 
-            parts = user_input.split()
-            command = parts[0].lower()
+    def command_func(self, command: str) -> Callable[..., None]:
+        command_mapping = {
+            "exit": self.handle_exit,
+            "quit": self.handle_exit,
+            "help": self.handle_help,
+            "load": self.handle_load,
+            "save": self.handle_save,
+            "close": self.handle_close,
+            "editor-list": self.handle_editor_list,
+            "insert": self.handle_insert,
+            "append": self.handle_append,
+            "edit-id": self.handle_edit_id,
+            "edit-text": self.handle_edit_text,
+            "delete": self.handle_delete,
+            "print-tree": self.handle_print_tree,
+            "print-indent": self.handle_print_indent,
+            "spell-check": self.handle_spell_check,
+            "init": self.handle_init,
+            "undo": self.handle_undo,
+            "redo": self.handle_redo,
+            "showid": self.handle_showid,
+            "dir-tree": self.handle_dir_tree,
+            "dir-indent": self.handle_dir_indent,
+            "dir": self.handle_dir,
+        }
 
-            if command in ["exit", "quit"]:
-                print("Exiting editor.")
-                break
-            elif command == "help":
-                self.print_help()
-            elif command == "insert":
-                self.handle_insert(parts)
-            elif command == "append":
-                self.handle_append(parts)
-            elif command == "edit-id":
-                self.handle_edit_id(parts)
-            elif command == "edit-text":
-                self.handle_edit_text(parts)
-            elif command == "delete":
-                self.handle_delete(parts)
-            elif command == "print-tree":
-                self.handle_print_tree()
-            elif command == "print-indent":
-                self.handle_print_indent(parts)
-            elif command == "spell-check":
-                self.handle_spell_check()
-            elif command == "init":
-                self.handle_init()
-            elif command == "undo":
-                self.editor.undo()
-            elif command == "redo":
-                self.editor.redo()
-            elif command == "showid":
-                self.handle_showid(parts)
-            else:
-                print("Unknown command. Type 'help' for a list of commands.")
+        return command_mapping.get(command, self.handle_unknown_command)
 
-    def print_help(self):
-        help_text = """
-Available commands:
-insert <tagName> <idValue> <insertLocation> [textContent]
-append <tagName> <idValue> <parentElement> [textContent]
-edit-id <oldId> <newId>
-edit-text <elementId> [newTextContent]
-delete <elementId>
-print-tree
-print-indent [indentSize]
-spell-check
-init
-undo
-redo
-showid <true|false>
-help
-exit
-"""
-        print(help_text)
+    def __call__(self, user_input: str) -> None:
+        command, *args = user_input.split()
+        command_func = self.command_func(command)
 
-    def handle_insert(self, parts):
-        if len(parts) < 4:
-            print("Invalid insert command. Usage: insert <tagName> <idValue> <insertLocation> [textContent]")
+        # Pass only arguments to command functions.
+        co_argcount = command_func.__code__.co_argcount
+        command_func(args) if co_argcount > 1 else command_func()
+
+    def handle_exit(self):
+        # TODO: move exit handler to session manager.
+        opened_files = self.session_manager.get_opened_files()
+        active_files = self.session_manager.get_active_file()
+        showids = self.session_manager.get_showids()
+        save_data = {
+            "file_list": opened_files,
+            "active_file": active_files,
+            "showid_list": showids
+        }
+        with open("session_data.json", "w", encoding="utf-8") as f:
+            json.dump(save_data, f, indent=4)
+        print("Session data saved to session_data.json.")
+        for file in opened_files:
+            self.session_manager.close(self.writer)
+        print("Existing session manager.")
+        sys.exit(0)
+
+    def handle_help(self):
+        print(self.help_text)
+
+    def handle_load(self, args: List[str]):
+        if len(args) != 1:
+            print("Invalid load command. Usage: load <filepath>")
             return
-        tag_name = parts[1]
-        id_value = parts[2]
-        insert_location = parts[3]
-        text_content = ' '.join(parts[4:]) if len(parts) > 4 else ""
+        filename =args[0]
+        # TODO: maybe parser should be integrated to session_manager.
+        self.session_manager.load(filename, self.parser)
+
+    def handle_save(self, args: List[str]):
+        if len(args) != 1:
+            print("Invalid save command. Usage: save <filepath>")
+            return
+        filename = args[0]
+        # TODO: maybe writer should be integrated to sesion_manager.
+        self.session_manager.save(filename, self.writer)
+    
+    def handle_close(self):
+        # TODO: to be checked.
+        self.session_manager.close(self.writer)
+    
+    def handle_editor_list(self):
+        self.session_manager.list_editors()
+
+    def handle_insert(self, args: List[str]):
+        if len(args) < 3:
+            print(
+                "Invalid insert command. Usage: insert <tagName> <idValue> <insertLocation> [textContent]"
+            )
+            return
+        tag_name, id_value, insert_location, *text_content = args
+        text_content = " ".join(text_content) if text_content else ""
         new_element = HTMLElement(tag_name, id_value, text_content)
         command = InsertCommand(self.editor.document, new_element, insert_location)
         self.editor.execute_command(command)
 
-    def handle_append(self, parts):
-        if len(parts) < 4:
-            print("Invalid append command. Usage: append <tagName> <idValue> <parentElement> [textContent]")
+    def handle_append(self, args: List[str]):
+        if len(args) < 3:
+            print(
+                "Invalid append command. Usage: append <tagName> <idValue> <parentElement> [textContent]"
+            )
             return
-        tag_name = parts[1]
-        id_value = parts[2]
-        parent_element = parts[3]
-        text_content = ' '.join(parts[4:]) if len(parts) > 4 else ""
+        tag_name, id_value, parent_element, *text_content = args
+        text_content = " ".join(text_content) if text_content else ""
         new_element = HTMLElement(tag_name, id_value, text_content)
         command = AppendCommand(self.editor.document, new_element, parent_element)
         self.editor.execute_command(command)
 
-    def handle_edit_id(self, parts):
-        if len(parts) < 3:
+    def handle_edit_id(self, args: List[str]):
+        if len(args) != 2:
             print("Invalid edit-id command. Usage: edit-id <oldId> <newId>")
             return
-        old_id = parts[1]
-        new_id = parts[2]
+        old_id, new_id = args
         command = EditIdCommand(self.editor.document, old_id, new_id)
         self.editor.execute_command(command)
 
-    def handle_edit_text(self, parts):
-        if len(parts) < 2:
-            print("Invalid edit-text command. Usage: edit-text <elementId> [newTextContent]")
+    def handle_edit_text(self, args: List[str]):
+        if len(args) < 1:
+            print(
+                "Invalid edit-text command. Usage: edit-text <elementId> [newTextContent]"
+            )
             return
-        element_id = parts[1]
-        new_text = ' '.join(parts[2:]) if len(parts) > 2 else ""
+        element_id, new_text = args
+        new_text = " ".join(new_text) if new_text else ""
         command = EditTextCommand(self.editor.document, element_id, new_text)
         self.editor.execute_command(command)
 
-    def handle_delete(self, parts):
-        if len(parts) < 2:
+    def handle_delete(self, args: List[str]):
+        if len(args) != 1:
             print("Invalid delete command. Usage: delete <elementId>")
             return
-        element_id = parts[1]
+        element_id = args[0]
         command = DeleteCommand(self.editor.document, element_id)
         self.editor.execute_command(command)
 
     def handle_print_tree(self):
-        self.display_strategy.display(self.editor.document, self.editor.show_id)
+        self.tree_display.display(self.editor.document, self.editor.show_id)
 
-    def handle_print_indent(self, parts):
-        indent_size = 2  # 默认缩进
-        if len(parts) > 1:
+    def handle_print_indent(self, args: List[str]):
+        if args:
             try:
-                indent_size = int(parts[1])
+                self.indent_display.indent_size = int(args[0])
             except ValueError:
                 print("Invalid indent value. Using default (2).")
-        self.display_strategy = IndentDisplayStrategy(indent_size)
-        self.display_strategy.display(self.editor.document, self.editor.show_id)
+
+        self.indent_display.display(self.editor.document, self.editor.show_id)
 
     def handle_spell_check(self):
         errors = self.spell_checker.check_spelling(self.editor.document)
@@ -161,15 +192,20 @@ exit
                 print(error)
 
     def handle_init(self):
-        # TODO 需要在commands.py写工具类来完成这个功能
         command = InitCommand(self.editor.document)
         self.editor.execute_command(command)
 
-    def handle_showid(self, parts):
-        if len(parts) < 2:
+    def handle_undo(self):
+        self.editor.undo()
+
+    def handle_redo(self):
+        self.editor.redo()
+
+    def handle_showid(self, args: List[str]):
+        if len(args) != 2:
             print("Invalid showid command. Usage: showid <true|false>")
             return
-        value = parts[1].lower()
+        value = args[0].lower()
         if value == "true":
             self.editor.show_id = True
             print("showId set to True.")
@@ -178,3 +214,65 @@ exit
             print("showId set to False.")
         else:
             print("Invalid value for showid. Use 'true' or 'false'.")
+
+    def handle_dir_tree(self):
+        self.display_directory(self.session_manager.editors.keys(), "tree")
+
+    def handle_dir_indent(self, args: List[str]):
+        if args:
+            try:
+                self.indent_display.indent_size = int(args[1])
+            except ValueError:
+                print("Invalid indent value. Using default (2).")
+
+        self.display_directory(self.session_manager.editors.keys(), "indent")
+
+    def handle_dir(self, args: List[str]): 
+        # TODO: to be added.
+        ...
+
+    def display_directory(self, filenames, display_mode: str):
+        # for filename in filenames:
+        #     modified_indicator = (
+        #         "*" if self.session_manager.active_filename == filename else ""
+        #     )
+        #     print(f"{filename}{modified_indicator}")
+        # TODO: to be added.
+        if display_mode == "tree":
+            ...
+        else:
+            ...
+
+    def handle_unknown_command(self, args: List[str]):
+        print("Unknown command. Type 'help' for a list of commands.")
+
+
+help_text = """
+Command-line Help:
+1. load filename.html  
+   - Load an HTML file into the editor.  
+   - If the file does not exist, a new file will be created.  
+   - The newly loaded file becomes the active file.  
+
+2. save filename.html  
+   - Save the current active file with the specified name.  
+   - If the file already exists, it will be overwritten.  
+
+3. close  
+   - Close the current active editor.  
+   - If there are unsaved changes, you will be prompted to save the file.  
+   - After closing, the first file in the open editor list becomes the active editor.  
+   - If no files are open, there will be no active editor.  
+
+4. editor-list  
+   - Display a list of all files currently open in the session.  
+   - The list shows:  
+     - `*` for modified files.  
+     - `>` to indicate the active file.  
+
+5. edit filename.html  
+   - Switch the active editor to the specified file.  
+   - The file must already be open in the session.  
+
+Type any command above to perform the specified action.
+"""
