@@ -16,6 +16,11 @@ class Command(ABC):
     def undo(self):
         pass
 
+class InitCommand(Command):
+    def __init__(self, document: HTMLDocument):
+        # TODO: to be added.
+        ...
+
 class InsertCommand(Command):
     """
     插入元素命令。
