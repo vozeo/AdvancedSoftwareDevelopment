@@ -48,10 +48,7 @@ class CLI:
             "save": self.handle_save,
             "close": self.handle_close,
             "editor-list": self.handle_editor_list,
-<<<<<<< HEAD
-=======
             "edit": self.handle_edit,
->>>>>>> yjh-dev
             "insert": self.handle_insert,
             "append": self.handle_append,
             "edit-id": self.handle_edit_id,
@@ -107,6 +104,7 @@ class CLI:
         filename =args[0]
         # TODO: maybe parser should be integrated to session_manager.
         self.session_manager.load(filename, self.parser)
+        self.editor = self.session_manager.get_active_editor()
 
     def handle_save(self, args: List[str]):
         if len(args) != 1:
@@ -122,8 +120,6 @@ class CLI:
     
     def handle_editor_list(self):
         self.session_manager.list_editors()
-<<<<<<< HEAD
-=======
     
     def handle_edit(self, args: List[str]):
         if len(args) != 1:
@@ -132,7 +128,6 @@ class CLI:
         filename = args[0]
         self.session_manager.switch_editor(filename)
         self.editor = self.session_manager.get_active_editor()
->>>>>>> yjh-dev
 
     def handle_insert(self, args: List[str]):
         if len(args) < 3:
