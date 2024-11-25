@@ -7,7 +7,7 @@
 # 修改后的命令有load <filepath>, save <filepath>, close, editor-list, edit <filepath>, exit/quit
 import json
 
-from exceptiongroup import catch
+# from exceptiongroup import catch
 
 # bug报告：print函数有问题；edit函数切换editor速度太慢
 from session_manager import SessionManager

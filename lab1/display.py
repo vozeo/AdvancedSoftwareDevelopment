@@ -48,7 +48,7 @@ class TreeDisplayStrategy(DisplayStrategy):
         else:
             tempprefix = "    "
         new_prefix = prefix + text_connector if element.text_content else prefix + (tempprefix if is_last else "│   ")
-        #print(child_count)
+
         for i, child in enumerate(element.children):
             is_last_child = (i == child_count - 1)
             self.print_element(child, new_prefix, is_last_child, show_id)

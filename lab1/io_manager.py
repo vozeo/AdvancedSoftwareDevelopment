@@ -1,5 +1,5 @@
 # io_manager.py
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 from model import HTMLDocument, HTMLElement
 import os
 
@@ -7,6 +7,11 @@ class HTMLParser:
     """
     负责读取和解析 HTML 文件，将其转化为 HTMLDocument 对象。
     """
+    
+    # 直接获取当前节点下的文本，而非get_text的所有文本
+    def get_direct_text(self, tag) -> str:
+        return "".join(child.strip() for child in tag.contents if isinstance(child, NavigableString))
+
     def parse(self, filepath: str) -> HTMLDocument:
         if not os.path.exists(filepath):
             print(f"File '{filepath}' does not exist.")
@@ -23,8 +28,12 @@ class HTMLParser:
                 if child.name:
                     tag = child.name
                     id_attr = child.get('id', tag)
-                    text = child.get_text(strip=True)
+                    text = self.get_direct_text(child)
                     element = HTMLElement(tag, id_attr, text)
+                    # 对title进行特殊处理 原来存在的init模板中的删了重新加
+                    if tag == 'title': 
+                        title_element = document.head.find_by_id("title")
+                        document.head.remove_child(title_element)
                     document.head.add_child(element)
 
         # 解析 <body>
@@ -35,7 +44,7 @@ class HTMLParser:
                     # 文本节点
                     text = child.strip()
                     if text:
-                        text_element = HTMLElement("text", "text", text)
+                        text_element = HTMLElement("text", "text", text)   # TODO Text ID 的唯一性
                         document.body.add_child(text_element)
                 elif child.name:
                     element = self.parse_element(child)
@@ -46,7 +55,7 @@ class HTMLParser:
     def parse_element(self, bs_element) -> HTMLElement:
         tag = bs_element.name
         id_attr = bs_element.get('id', tag)
-        text = bs_element.get_text(strip=True)
+        text = self.get_direct_text(bs_element)
         element = HTMLElement(tag, id_attr, text)
         for child in bs_element.children:
             if child.name:
