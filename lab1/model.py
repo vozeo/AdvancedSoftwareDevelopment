@@ -1,6 +1,9 @@
 # model.py
 from typing import List, Optional
 from spellchecker import SpellChecker
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from display import DisplayStrategy
 
 class HTMLElement:
     """
@@ -73,6 +76,8 @@ class HTMLDocument:
         self.head.add_child(self.title)
         self.root.add_child(self.body)
 
+        self.display_strategy = None # 输出策略
+
     def find_by_id(self, search_id: str) -> Optional[HTMLElement]:
         """
         在文档中查找具有指定 id 的元素。
@@ -87,3 +92,17 @@ class HTMLDocument:
             element.parent.remove_child(element)
             return True
         return False
+    
+    def set_display_strategy(self, strategy: "DisplayStrategy") -> None:
+        """
+        设定输出策略
+        """
+        self.display_strategy = strategy
+
+    def display(self, show_id: bool = True) -> str:
+        """
+        输出（字符串形式）
+        """
+        if self.display_strategy is None:
+            raise ValueError("Display strategy is not set.")
+        return self.display_strategy.display(self, show_id)
