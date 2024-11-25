@@ -35,7 +35,7 @@ class CLI:
         self.tree_display = TreeDisplayStrategy()
 
         # Use 2 as the default indent_size.
-        self.indent_display = IndentDisplayStrategy(2)
+        self.indent_display = IndentDisplayStrategy(indent_size=2)
 
         self.help_text = help_text
 
@@ -181,7 +181,9 @@ class CLI:
         self.editor.execute_command(command)
 
     def handle_print_tree(self):
-        self.tree_display.display(self.editor.document, self.editor.show_id)
+        # set tree
+        self.editor.document.set_display_strategy(self.tree_display)
+        print(self.editor.document.display(self.editor.show_id))
 
     def handle_print_indent(self, args: List[str]):
         if args:
@@ -190,7 +192,9 @@ class CLI:
             except ValueError:
                 print("Invalid indent value. Using default (2).")
 
-        self.indent_display.display(self.editor.document, self.editor.show_id)
+        # set indent
+        self.editor.document.set_display_strategy(self.indent_display)
+        print(self.editor.document.display(self.editor.show_id))
 
     def handle_spell_check(self):
         errors = self.spell_checker.check_spelling(self.editor.document)
