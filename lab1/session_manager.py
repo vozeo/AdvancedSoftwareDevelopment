@@ -37,10 +37,11 @@ class SessionManager:
         """
         if filename not in self.editors:
             print(f"File '{filename}' is not loaded.")
-            return
+            return False
         editor = self.editors[filename]
         writer.write(editor.document, filename)
         editor.is_modified = False
+        return True
 
     def close(self, writer: HTMLWriter):
         """
