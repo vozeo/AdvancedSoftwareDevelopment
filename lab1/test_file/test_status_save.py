@@ -1,4 +1,8 @@
 import unittest
+
+import sys
+sys.path.append('../../lab1')
+
 from unittest.mock import patch, mock_open
 import json
 from io import StringIO
@@ -23,7 +27,7 @@ class TestHTMLSessionManager(unittest.TestCase):
         mock_stdin.seek(0)
 
         # 导入被测试模块的main函数
-        from main import main
+        from lab1.main import main
 
         try:
             # 执行main函数

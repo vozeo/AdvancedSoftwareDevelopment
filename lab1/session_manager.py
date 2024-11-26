@@ -50,7 +50,7 @@ class SessionManager:
         target_name = self.active_filename
         if target_name =="":
             print("Editor is empty.")
-            return
+            return False
         editor = self.editors[target_name]
         if editor.is_modified:
             choice = input(f"File '{target_name}' has unsaved changes. Save before closing? (y/n): ").lower()
@@ -59,6 +59,7 @@ class SessionManager:
         del self.editors[target_name]
         print(f"Closed file: {target_name}")
         self.active_filename = next(iter(self.editors), "")
+        return True
 
     def list_editors(self):
         """
@@ -79,8 +80,10 @@ class SessionManager:
         if filename in self.editors:
             self.active_filename = filename
             print(f"Switched to editor: {filename}")
+            return True
         else:
             print(f"Editor for file '{filename}' not found.")
+            return False
 
     def get_active_editor(self) -> Editor:
         """
