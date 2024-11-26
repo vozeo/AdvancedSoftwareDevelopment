@@ -1,5 +1,1 @@
 # AdvancedSoftwareDevelopment
-
-cmx更改了main和cli文件， 需要session_manager中实现返回所有editor文件名称的函数（现有的函数是打印所有名称）和修改close函数以实现关闭当前活跃文件， 需要工具类中新增InitCommand
-
-ckx完成了session_manager的编写
