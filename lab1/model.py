@@ -10,8 +10,8 @@ class TreeNode:
     """
     通用树节点接口，所有节点类型都需要实现。
     """
-    def get_name(self) -> str:
-        """返回节点名称"""
+    def get_display_name(self, *args, **kwargs) -> str:
+        """返回展示用的节点名称"""
         raise NotImplementedError()
 
     def get_children(self) -> list["TreeNode"]:
@@ -21,6 +21,7 @@ class TreeNode:
     def is_leaf(self) -> bool:
         """判断是否是叶子节点"""
         raise NotImplementedError()
+
 
 class HTMLElement(TreeNode):
     """
@@ -81,7 +82,7 @@ class HTMLElement(TreeNode):
         return None
     
     # for display
-    def get_name(self, show_id: bool, format: str) -> str:
+    def get_display_name(self, show_id: bool, format: str) -> str:
         if format == "tree":
             # 检查是否有拼写错误
             spell_check_mark = "[X] " if self.has_spelling_error else ""

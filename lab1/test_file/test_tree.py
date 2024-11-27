@@ -21,15 +21,15 @@ class TestDisplayStrategies(unittest.TestCase):
         strategy = TreeDisplay()
         expected_output = (
             "html\n"
-             "├── head\n"
-             "│   └── title\n"
-             "└── body\n"
-             "    ├── h1#header\n"
-             "    │   └── Hello World\n"
-             "    └── p#paragraph\n"
-             "        ├── This is a test paragraph.\n"
-             "        └── span#highlight\n"
-             "            └── highlighted text")
+            "├── head\n"
+            "│   └── title\n"
+            "└── body\n"
+            "    ├── h1#header\n"
+            "    │   └── Hello World\n"
+            "    └── p#paragraph\n"
+            "        ├── This is a test paragraph.\n"
+            "        └── span#highlight\n"
+            "            └── highlighted text")
         with patch('sys.stdout', new=StringIO()) as fake_out:
             print(strategy.display(self.document))
             self.assertEqual(fake_out.getvalue().strip(), expected_output.strip())

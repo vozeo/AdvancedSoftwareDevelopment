@@ -6,7 +6,7 @@ from display import TreeDisplayStrategy, IndentDisplayStrategy
 from spell_checker import HTMLSpellChecker
 from session_manager import SessionManager
 from commands import *
-from io_manager import HTMLParser, HTMLWriter
+from io_manager import HTMLParser, HTMLWriter, Directory
 from typing import Callable, List
 import json
 import sys
@@ -62,8 +62,7 @@ class CLI:
             "redo": self.handle_redo,
             "showid": self.handle_showid,
             "dir-tree": self.handle_dir_tree,
-            "dir-indent": self.handle_dir_indent,
-            "dir": self.handle_dir,
+            "dir-indent": self.handle_dir_indent
         }
 
         return command_mapping.get(command, self.handle_unknown_command)
@@ -230,7 +229,11 @@ class CLI:
             print("Invalid value for showid. Use 'true' or 'false'.")
 
     def handle_dir_tree(self):
-        self.display_directory(self.session_manager.editors.keys(), "tree")
+        file_list = self.session_manager.get_opened_files()
+        active_file = self.session_manager.get_active_file()
+        directory = Directory(file_list=file_list, active_file=active_file)
+        directory.set_display_strategy(self.tree_display)
+        print(directory.display())
 
     def handle_dir_indent(self, args: List[str]):
         if args:
@@ -239,23 +242,11 @@ class CLI:
             except ValueError:
                 print("Invalid indent value. Using default (2).")
 
-        self.display_directory(self.session_manager.editors.keys(), "indent")
-
-    def handle_dir(self, args: List[str]): 
-        # TODO: to be added.
-        ...
-
-    def display_directory(self, filenames, display_mode: str):
-        # for filename in filenames:
-        #     modified_indicator = (
-        #         "*" if self.session_manager.active_filename == filename else ""
-        #     )
-        #     print(f"{filename}{modified_indicator}")
-        # TODO: to be added.
-        if display_mode == "tree":
-            ...
-        else:
-            ...
+        file_list = self.session_manager.get_opened_files()
+        active_file = self.session_manager.get_active_file()
+        directory = Directory(file_list=file_list, active_file=active_file)
+        directory.set_display_strategy(self.indent_display)
+        print(directory.display())
 
     def handle_unknown_command(self, args: List[str]):
         print("Unknown command. Type 'help' for a list of commands.")
