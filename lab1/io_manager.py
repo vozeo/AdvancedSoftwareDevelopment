@@ -109,7 +109,7 @@ class Directory:
                 if part not in current:
                     current[part] = {}
                 current = current[part]
-        self.root = FNode('root')
+        self.root = FNode('.')
         for subtree in tree.items():
             child_node = self.build_tree(subtree)
             self.root.add_child(child_node)
