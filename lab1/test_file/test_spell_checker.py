@@ -1,7 +1,10 @@
 # test_spell_checker.py
+import sys
+sys.path.append('../../lab1')
+
 import unittest
-from model import HTMLDocument, HTMLElement
-from spell_checker import HTMLSpellChecker
+from lab1.model import HTMLDocument, HTMLElement
+from lab1.spell_checker import HTMLSpellChecker
 
 class TestHTMLSpellChecker(unittest.TestCase):
     def setUp(self):

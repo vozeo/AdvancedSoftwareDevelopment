@@ -1,8 +1,11 @@
+import sys
+sys.path.append('../../lab1')
+
 import unittest
 from io import StringIO
 from unittest.mock import patch
-from display import TreeDisplayStrategy, IndentDisplayStrategy
-from model import HTMLDocument, HTMLElement
+from lab1.display import TreeDisplayStrategy, IndentDisplayStrategy
+from lab1.model import HTMLDocument, HTMLElement
 
 class TestDisplayStrategies(unittest.TestCase):
 
