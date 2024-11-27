@@ -1,6 +1,7 @@
 # io_manager.py
 from bs4 import BeautifulSoup, NavigableString
 from model import HTMLDocument, HTMLElement
+from model import TreeNode
 import os
 
 class HTMLParser:
