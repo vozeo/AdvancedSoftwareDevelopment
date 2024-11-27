@@ -112,14 +112,14 @@ class CLI:
         filename = args[0]
         # TODO: maybe writer should be integrated to sesion_manager.
         self.session_manager.save(filename, self.writer)
-    
+
     def handle_close(self):
         # TODO: to be checked.
         self.session_manager.close(self.writer)
-    
+
     def handle_editor_list(self):
         self.session_manager.list_editors()
-    
+
     def handle_edit(self, args: List[str]):
         if len(args) != 1:
             print("Invalid edit command. Usage: edit <filepath>")
@@ -254,18 +254,19 @@ class CLI:
 
 help_text = """
 Command-line Help:
-1. load filename.html  
+
+File Management:
+1. load <filepath>  
    - Load an HTML file into the editor.  
    - If the file does not exist, a new file will be created.  
    - The newly loaded file becomes the active file.  
 
-2. save filename.html  
+2. save <filepath>  
    - Save the current active file with the specified name.  
    - If the file already exists, it will be overwritten.  
 
 3. close  
    - Close the current active editor.  
-   - If there are unsaved changes, you will be prompted to save the file.  
    - After closing, the first file in the open editor list becomes the active editor.  
    - If no files are open, there will be no active editor.  
 
@@ -275,9 +276,61 @@ Command-line Help:
      - `*` for modified files.  
      - `>` to indicate the active file.  
 
-5. edit filename.html  
+5. edit <filepath>  
    - Switch the active editor to the specified file.  
    - The file must already be open in the session.  
 
-Type any command above to perform the specified action.
+Editing Operations:
+6. insert <tagName> <idValue> <insertLocation> [textContent]  
+   - Insert a new element before the specified location.  
+
+7. append <tagName> <idValue> <parentElement> [textContent]  
+   - Append a new element as a child to the specified parent element.  
+
+8. edit-id <oldId> <newId>  
+   - Edit the ID of an element.  
+
+9. edit-text <elementId> [newTextContent]  
+   - Edit the text content of the specified element.  
+
+10. delete <elementId>  
+    - Delete an element with the specified ID.  
+
+Undo/Redo:
+11. undo  
+    - Undo the last operation performed in the active editor.  
+
+12. redo  
+    - Redo the last undone operation in the active editor.  
+
+Display Options:
+13. print-tree  
+    - Print the document structure as a tree.  
+
+14. print-indent [indentSize]  
+    - Print the document structure with indentation.  
+    - Default indentation size is 2.  
+
+15. dir-tree  
+    - Display a directory-like tree of the files.  
+
+16. dir-indent [indentSize]  
+    - Display a directory-like indented structure of the files.  
+
+Spell Checker:
+17. spell-check  
+    - Check the active document for spelling errors.  
+
+18. showid <true|false>  
+    - Show or hide the element IDs in the display output.  
+
+Miscellaneous:
+19. init  
+    - Initialize a new document.  
+
+20. help  
+    - Display this help message.  
+
+21. exit / quit  
+    - Exit the application, saving session data before closing.  
 """
