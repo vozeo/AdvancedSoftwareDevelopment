@@ -10,8 +10,7 @@ from io_manager import HTMLParser, HTMLWriter, Directory
 from typing import Callable, List
 import json
 import sys
-
-import pdb
+import shlex
 
 
 class CLI:
@@ -68,7 +67,8 @@ class CLI:
         return command_mapping.get(command, self.handle_unknown_command)
 
     def __call__(self, user_input: str) -> None:
-        command, *args = user_input.split()
+        parsed_input = shlex.split(user_input)
+        command, *args = parsed_input
         command_func = self.command_func(command)
 
         # Pass only arguments to command functions.
@@ -253,31 +253,29 @@ class CLI:
 
 
 help_text = """
-Command-line Help:
-1. load filename.html  
-   - Load an HTML file into the editor.  
-   - If the file does not exist, a new file will be created.  
-   - The newly loaded file becomes the active file.  
+Available Commands:
+1. load <filename> - Load an HTML file (or create a new one if it doesn't exist).  
+2. save <filename> - Save the current file to the specified path.  
+3. close - Close the active editor. Prompts to save if there are changes.  
+4. editor-list - List open files. `*`=modified, `>`=active.  
+5. edit <filename> - Switch to an already open file by name.  
+6. insert <tag> <id> <pos> [text] - Insert an element.  
+   - <tag>: HTML tag. <id>: Element ID. <pos>: Insert position (e.g., after an ID). [text]: Optional content.  
+7. append <tag> <id> <parent> [text] - Append an element to a parent.  
+   - <tag>: HTML tag. <id>: Element ID. <parent>: Parent element ID. [text]: Optional content.  
+8. edit-id <oldId> <newId> - Change an element's ID.  
+9. edit-text <id> [text] - Edit text of an element. Clear text if omitted.  
+10. delete <id> - Delete an element by ID.  
+11. print-tree - Print the document in a tree structure.  
+12. print-indent [size] - Print the document with indentation. Default size=2.  
+13. spell-check - Check for spelling errors in the document.  
+14. init - Create a new, empty document.  
+15. undo - Undo the last action.  
+16. redo - Redo the last undone action.  
+17. showid <true|false> - Show or hide element IDs in the output.  
+18. dir-tree - Display open files as a tree.  
+19. dir-indent [size] - Display open files with indentation. Default size=2.  
+20. exit / quit - Save the session and exit.  
 
-2. save filename.html  
-   - Save the current active file with the specified name.  
-   - If the file already exists, it will be overwritten.  
-
-3. close  
-   - Close the current active editor.  
-   - If there are unsaved changes, you will be prompted to save the file.  
-   - After closing, the first file in the open editor list becomes the active editor.  
-   - If no files are open, there will be no active editor.  
-
-4. editor-list  
-   - Display a list of all files currently open in the session.  
-   - The list shows:  
-     - `*` for modified files.  
-     - `>` to indicate the active file.  
-
-5. edit filename.html  
-   - Switch the active editor to the specified file.  
-   - The file must already be open in the session.  
-
-Type any command above to perform the specified action.
+Type `help` to view this list anytime.
 """
