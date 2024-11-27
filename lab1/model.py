@@ -10,8 +10,16 @@ class TreeNode:
     """
     通用树节点接口，所有节点类型都需要实现。
     """
+    def __init__(self):
+        self.children: List['TreeNode'] = []
+        self.parent: Optional['TreeNode'] = None
+
     def get_display_name(self, *args, **kwargs) -> str:
         """返回展示用的节点名称"""
+        raise NotImplementedError()
+    
+    def add_child(self, *args, **kwargs):
+        """增加孩子"""
         raise NotImplementedError()
 
     def get_children(self) -> list["TreeNode"]:
@@ -28,11 +36,12 @@ class HTMLElement(TreeNode):
     表示 HTML 元素的类，包含标签名、id、文本内容和子元素。
     """
     def __init__(self, tag_name: str, id_value: Optional[str] = None, text_content: str = ""):
+        super(HTMLElement, self).__init__()
         self.tag_name = tag_name
         self.id = id_value if id_value else tag_name  # 默认 id 为标签名
         self.text_content = text_content
-        self.children: List['HTMLElement'] = []
-        self.parent: Optional['HTMLElement'] = None
+        # self.children: List['HTMLElement'] = []
+        # self.parent: Optional['HTMLElement'] = None
         self.has_spelling_error = False
 
     def add_child(self, child: 'HTMLElement'):

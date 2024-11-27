@@ -84,9 +84,10 @@ class HTMLWriter:
 
 class FNode(TreeNode):
     def __init__(self, file_name) -> None:
+        super(FNode, self).__init__()
         self.file_name = file_name
-        self.children: List['FNode'] = []
-        self.parent: Optional['FNode'] = None
+        # self.children: List['FNode'] = []
+        # self.parent: Optional['FNode'] = None
         self.is_active: bool = False
 
     def add_child(self, child: 'FNode') -> None:
@@ -114,14 +115,15 @@ class Directory:
             child_node = self.build_tree(subtree)
             self.root.add_child(child_node)
         # set active file
-        parts = active_file.split('/')
-        current = self.root
-        for part in parts:
-            for subtree in current.children:
-                if subtree.file_name == part:
-                    current=subtree
-                    break
-        current.set_active()
+        if active_file:
+            parts = active_file.split('/')
+            current = self.root
+            for part in parts:
+                for subtree in current.children:
+                    if subtree.file_name == part:
+                        current=subtree
+                        break
+            current.set_active()
 
     def build_tree(self, file_tree: Tuple[str, dict]) -> FNode:
         file_name, subtree = file_tree
