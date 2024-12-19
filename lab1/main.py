@@ -1,5 +1,4 @@
 import json
-
 from session_manager import SessionManager
 from io_manager import HTMLParser, HTMLWriter
 from spell_checker import HTMLSpellChecker

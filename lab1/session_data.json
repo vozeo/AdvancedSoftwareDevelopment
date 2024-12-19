@@ -1,11 +1,17 @@
 {
     "file_list": [
         "html/test.html",
-        "html/test1.html"
+        "html/test1.html",
+        "test_file_2.html",
+        "html/test_file_2.html",
+        "html/test_file_1.html"
     ],
-    "active_file": "html/test1.html",
+    "active_file": "html/test_file_1.html",
     "showid_list": [
         true,
-        false
+        false,
+        true,
+        true,
+        true
     ]
 }

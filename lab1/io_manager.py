@@ -1,6 +1,10 @@
 # io_manager.py
 from bs4 import BeautifulSoup, NavigableString
 from model import HTMLDocument, HTMLElement
+from model import TreeNode
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
+if TYPE_CHECKING:
+    from display import DisplayStrategy
 import os
 
 class HTMLParser:
@@ -75,3 +79,70 @@ class HTMLWriter:
             html_str = document.display(show_id=True)
             file.write(html_str)
         print(f"File written to: {filepath}")
+
+
+
+class FNode(TreeNode):
+    def __init__(self, file_name) -> None:
+        super(FNode, self).__init__()
+        self.file_name = file_name
+        # self.children: List['FNode'] = []
+        # self.parent: Optional['FNode'] = None
+        self.is_active: bool = False
+
+    def add_child(self, child: 'FNode') -> None:
+        self.children.append(child)
+        child.parent=self
+
+    def set_active(self) -> None:
+        self.is_active = True
+    
+    def get_display_name(self) -> str:
+        return self.file_name if not self.is_active else self.file_name + "*"
+
+class Directory:
+    def __init__(self, file_list: List[str], active_file: str) -> None:
+        tree = {}
+        for file in file_list:
+            parts = file.split("/")
+            current = tree
+            for part in parts:
+                if part not in current:
+                    current[part] = {}
+                current = current[part]
+        self.root = FNode('.')
+        for subtree in tree.items():
+            child_node = self.build_tree(subtree)
+            self.root.add_child(child_node)
+        # set active file
+        if active_file:
+            parts = active_file.split('/')
+            current = self.root
+            for part in parts:
+                for subtree in current.children:
+                    if subtree.file_name == part:
+                        current=subtree
+                        break
+            current.set_active()
+
+    def build_tree(self, file_tree: Tuple[str, dict]) -> FNode:
+        file_name, subtree = file_tree
+        file = FNode(file_name)
+        for child in subtree.items():
+            child_node = self.build_tree(child)
+            file.add_child(child_node)
+        return file
+    
+    def set_display_strategy(self, strategy: "DisplayStrategy") -> None:
+        """
+        设定输出策略
+        """
+        self.display_strategy = strategy
+
+    def display(self) -> str:
+        """
+        输出（字符串形式）
+        """
+        if self.display_strategy is None:
+            raise ValueError("Display strategy is not set.")
+        return self.display_strategy.display(self)

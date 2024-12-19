@@ -6,12 +6,11 @@ from display import TreeDisplayStrategy, IndentDisplayStrategy
 from spell_checker import HTMLSpellChecker
 from session_manager import SessionManager
 from commands import *
-from io_manager import HTMLParser, HTMLWriter
+from io_manager import HTMLParser, HTMLWriter, Directory
 from typing import Callable, List
 import json
 import sys
-
-import pdb
+import shlex
 
 
 class CLI:
@@ -62,14 +61,14 @@ class CLI:
             "redo": self.handle_redo,
             "showid": self.handle_showid,
             "dir-tree": self.handle_dir_tree,
-            "dir-indent": self.handle_dir_indent,
-            "dir": self.handle_dir,
+            "dir-indent": self.handle_dir_indent
         }
 
         return command_mapping.get(command, self.handle_unknown_command)
 
     def __call__(self, user_input: str) -> None:
-        command, *args = user_input.split()
+        parsed_input = shlex.split(user_input)
+        command, *args = parsed_input
         command_func = self.command_func(command)
 
         # Pass only arguments to command functions.
@@ -77,7 +76,7 @@ class CLI:
         command_func(args) if co_argcount > 1 else command_func()
 
     def handle_exit(self):
-        # TODO: move exit handler to session manager.
+
         opened_files = self.session_manager.get_opened_files()
         active_files = self.session_manager.get_active_file()
         showids = self.session_manager.get_showids()
@@ -102,7 +101,7 @@ class CLI:
             print("Invalid load command. Usage: load <filepath>")
             return
         filename =args[0]
-        # TODO: maybe parser should be integrated to session_manager.
+
         self.session_manager.load(filename, self.parser)
         self.editor = self.session_manager.get_active_editor()
 
@@ -111,16 +110,16 @@ class CLI:
             print("Invalid save command. Usage: save <filepath>")
             return
         filename = args[0]
-        # TODO: maybe writer should be integrated to sesion_manager.
+
         self.session_manager.save(filename, self.writer)
-    
+
     def handle_close(self):
-        # TODO: to be checked.
+
         self.session_manager.close(self.writer)
-    
+
     def handle_editor_list(self):
         self.session_manager.list_editors()
-    
+
     def handle_edit(self, args: List[str]):
         if len(args) != 1:
             print("Invalid edit command. Usage: edit <filepath>")
@@ -230,7 +229,11 @@ class CLI:
             print("Invalid value for showid. Use 'true' or 'false'.")
 
     def handle_dir_tree(self):
-        self.display_directory(self.session_manager.editors.keys(), "tree")
+        file_list = self.session_manager.get_opened_files()
+        active_file = self.session_manager.get_active_file()
+        directory = Directory(file_list=file_list, active_file=active_file)
+        directory.set_display_strategy(self.tree_display)
+        print(directory.display())
 
     def handle_dir_indent(self, args: List[str]):
         if args:
@@ -239,54 +242,102 @@ class CLI:
             except ValueError:
                 print("Invalid indent value. Using default (2).")
 
-        self.display_directory(self.session_manager.editors.keys(), "indent")
-
-    def handle_dir(self, args: List[str]): 
-        # TODO: to be added.
-        ...
-
-    def display_directory(self, filenames, display_mode: str):
-        # for filename in filenames:
-        #     modified_indicator = (
-        #         "*" if self.session_manager.active_filename == filename else ""
-        #     )
-        #     print(f"{filename}{modified_indicator}")
-        # TODO: to be added.
-        if display_mode == "tree":
-            ...
-        else:
-            ...
+        file_list = self.session_manager.get_opened_files()
+        active_file = self.session_manager.get_active_file()
+        directory = Directory(file_list=file_list, active_file=active_file)
+        directory.set_display_strategy(self.indent_display)
+        print(directory.display())
 
     def handle_unknown_command(self, args: List[str]):
         print("Unknown command. Type 'help' for a list of commands.")
 
 
 help_text = """
+Type `help` to view this list anytime.
 Command-line Help:
-1. load filename.html  
-   - Load an HTML file into the editor.  
-   - If the file does not exist, a new file will be created.  
-   - The newly loaded file becomes the active file.  
 
-2. save filename.html  
-   - Save the current active file with the specified name.  
-   - If the file already exists, it will be overwritten.  
+Available Commands:
+1. load <filename>
+   - Load an HTML file into the editor. If the file does not exist, a new file will be created.
+   - <filename>: Path to the HTML file to load.
 
-3. close  
-   - Close the current active editor.  
-   - If there are unsaved changes, you will be prompted to save the file.  
-   - After closing, the first file in the open editor list becomes the active editor.  
-   - If no files are open, there will be no active editor.  
+2. save <filename>
+   - Save the current active file to the specified filename.
+   - <filename>: Path where the active file will be saved.
 
-4. editor-list  
-   - Display a list of all files currently open in the session.  
-   - The list shows:  
-     - `*` for modified files.  
-     - `>` to indicate the active file.  
+3. close
+   - Close the currently active editor. If there are unsaved changes, you will be prompted to save them.
+   - After closing, the next open file (if any) becomes the active file.
 
-5. edit filename.html  
-   - Switch the active editor to the specified file.  
-   - The file must already be open in the session.  
+4. editor-list
+   - Display all open files in the session.
+   - `*` indicates modified files, and `>` marks the active file.
 
-Type any command above to perform the specified action.
+5. edit <filename>
+   - Switch the active editor to the specified file.
+   - <filename>: The name of an already open file.
+
+6. insert <tag> <id> <pos> [text]
+   - Insert a new HTML element into the document at the specified position.
+   - <tag>: The HTML tag (e.g., div, span).
+   - <id>: A unique ID for the new element.
+   - <pos>: Where to insert (e.g., after an existing element ID).
+   - [text]: Optional content for the new element.
+
+7. append <tag> <id> <parent> [text]
+   - Append a new HTML element as a child of a parent element.
+   - <tag>: The HTML tag (e.g., div, p).
+   - <id>: A unique ID for the new element.
+   - <parent>: ID of the parent element.
+   - [text]: Optional content for the new element.
+
+8. edit-id <oldId> <newId>
+   - Change the ID of an existing HTML element.
+   - <oldId>: The current ID of the element.
+   - <newId>: The new ID to assign.
+
+9. edit-text <id> [text]
+   - Edit the text content of an HTML element.
+   - <id>: The ID of the element to edit.
+   - [text]: The new text content. If omitted, the text will be cleared.
+
+10. delete <id>
+    - Delete an HTML element by its ID.
+    - <id>: The ID of the element to delete.
+
+11. print-tree
+    - Print the document in a hierarchical tree structure.
+
+12. print-indent [size]
+    - Print the document with indentation for better readability.
+    - [size]: Optional indentation size (default is 2).
+
+13. spell-check
+    - Check for spelling errors in the current document and display a list of errors, if any.
+
+14. init
+    - Initialize a new, empty HTML document in the editor.
+
+15. undo
+    - Undo the last action performed in the editor.
+
+16. redo
+    - Redo the last undone action in the editor.
+
+17. showid <true|false>
+    - Toggle whether element IDs are displayed in output.
+    - <true|false>: Set to `true` to show IDs or `false` to hide them.
+
+18. dir-tree
+    - Display a tree structure of all open files in the session, highlighting the active file.
+
+19. dir-indent [size]
+    - Display open files with indentation for better visualization.
+    - [size]: Optional indentation size (default is 2).
+
+20. exit / quit
+    - Save the current session state and exit the program.
+    - Session data will be saved to `session_data.json`.
+
+Type `help` to view this list at any time.
 """

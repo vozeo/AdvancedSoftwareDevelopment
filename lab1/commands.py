@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from model import HTMLDocument, HTMLElement
+import copy
 
 class Command(ABC):
     """
@@ -17,9 +18,30 @@ class Command(ABC):
         pass
 
 class InitCommand(Command):
+    """
+    初始化编辑器命令。
+    """
     def __init__(self, document: HTMLDocument):
-        # TODO: to be added.
-        ...
+        self.document = document
+        self.previous_state = None  # 用于保存之前的状态以便撤销
+
+    def execute(self):
+        self.previous_state = copy.deepcopy(self.document)
+        self.document.root = HTMLElement(tag_name="html", id_value="root")
+        head = HTMLElement(tag_name="head")
+        title = HTMLElement(tag_name="title")
+        head.add_child(title)
+        body = HTMLElement(tag_name="body")
+        self.document.root.add_child(head)
+        self.document.root.add_child(body)
+        print("Initialized editor with an empty HTML template.")
+
+    def undo(self):
+        if self.previous_state:
+            self.document.root = self.previous_state.root
+            print("Undo Init: Restored the document to its previous state.")
+        else:
+            print("Undo Init: No previous state to restore.")
 
 class InsertCommand(Command):
     """
