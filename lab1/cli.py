@@ -76,7 +76,7 @@ class CLI:
         command_func(args) if co_argcount > 1 else command_func()
 
     def handle_exit(self):
-        # TODO: move exit handler to session manager.
+
         opened_files = self.session_manager.get_opened_files()
         active_files = self.session_manager.get_active_file()
         showids = self.session_manager.get_showids()
@@ -101,7 +101,7 @@ class CLI:
             print("Invalid load command. Usage: load <filepath>")
             return
         filename =args[0]
-        # TODO: maybe parser should be integrated to session_manager.
+
         self.session_manager.load(filename, self.parser)
         self.editor = self.session_manager.get_active_editor()
 
@@ -110,11 +110,11 @@ class CLI:
             print("Invalid save command. Usage: save <filepath>")
             return
         filename = args[0]
-        # TODO: maybe writer should be integrated to sesion_manager.
+
         self.session_manager.save(filename, self.writer)
 
     def handle_close(self):
-        # TODO: to be checked.
+
         self.session_manager.close(self.writer)
 
     def handle_editor_list(self):
